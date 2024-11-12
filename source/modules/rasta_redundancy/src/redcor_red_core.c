@@ -415,6 +415,11 @@ static void AddMessageToReceivedBufferAndDeliverDeferQueue(const uint32_t red_ch
   redtyp_RedundancyMessagePayload received_message_payload;
   redmsg_GetMessagePayload(&redcor_redundancy_channels[red_channel_id].input_buffer.message_buffer, &received_message_payload);
   redrbf_AddToBuffer(red_channel_id, &received_message_payload);
+  
+  // input_buffer is empty in case of a DiscReqReceived
+  if(!redcor_redundancy_channels[red_channel_id].input_buffer.message_in_buffer)
+    return;
+  
   reddia_UpdateRedundancyChannelDiagnostics(red_channel_id, redcor_redundancy_channels[red_channel_id].input_buffer.transport_channel_id,
                                             redmsg_GetMessageSequenceNumber(&redcor_redundancy_channels[red_channel_id].input_buffer.message_buffer));
   ++redcor_redundancy_channels[red_channel_id].seq_rx;  // Unsigned integer wrap around allowed here
