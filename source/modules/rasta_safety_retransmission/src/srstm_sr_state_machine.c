@@ -565,6 +565,7 @@ static void ProcessStateUpEvents(const uint32_t connection_id, const srtyp_Conne
       }
       break;
     case srtyp_kConnEventDiscReqReceived:
+      CloseConnection(connection_id, sraty_kDiscReasonUserRequest, true);
       CloseRedundancyChannel(connection_id, true);
       break;
     case srtyp_kConnEventHbReceived:  // fall-through
@@ -761,9 +762,9 @@ static void CloseConnection(const uint32_t connection_id, const sraty_DiscReason
 
   if (is_incoming_message) {
     srcor_UpdateConfirmedTxSequenceNumber(connection_id);  // [1] Set CS_T = SN_PDU for incoming messages
+  } else { // send DiscReq if not already received
+    srcor_SendDiscReqMessage(connection_id, disconnect_reason);  // [1] Close connection
   }
-
-  srcor_SendDiscReqMessage(connection_id, disconnect_reason);  // [1] Close connection
   UpdateConnectionStateWithDiscReason(connection_id, sraty_kConnectionClosed, disconnect_reason);
 }
 
