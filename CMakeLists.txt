@@ -30,20 +30,41 @@ else()
   message([FATAL_ERROR] Invalid build type!)
 endif()
 
-# =========== unit tests ===================
-if(GOOGLE_TEST_PATH)
-  message(STATUS "GOOGLE_TEST_PATH is set to: ${GOOGLE_TEST_PATH}")
-  find_package(GTest REQUIRED PATHS ${GOOGLE_TEST_PATH} NO_SYSTEM_ENVIRONMENT_PATH)
-else()
-  find_package(GTest REQUIRED)
-endif()
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
-include(GoogleTest)
+# =========== unit tests ===================
 include(CTest)
-include(gtest)
+if(BUILD_TESTING)
+  if(GOOGLE_TEST_PATH)
+    message(STATUS "GOOGLE_TEST_PATH is set to: ${GOOGLE_TEST_PATH}")
+    find_package(GTest REQUIRED PATHS ${GOOGLE_TEST_PATH} NO_SYSTEM_ENVIRONMENT_PATH)
+  else()
+    find_package(GTest REQUIRED)
+  endif()
+
+  include(GoogleTest)
+  include(gtest)
+endif()
 
 # =========== modules ===================
 add_subdirectory(source/modules)
+
+# =========== combine ===================
+set(ONE_SHARED_LIB "" CACHE BOOL "Build on shared library")
+
+if(ONE_SHARED_LIB)
+  set_property(TARGET rasta_common PROPERTY POSITION_INDEPENDENT_CODE ON)
+  set_property(TARGET rasta_redundancy PROPERTY POSITION_INDEPENDENT_CODE ON)
+  set_property(TARGET rasta_redundancy_config PROPERTY POSITION_INDEPENDENT_CODE ON)
+  set_property(TARGET rasta_safety_retransmission PROPERTY POSITION_INDEPENDENT_CODE ON)
+  set_property(TARGET rasta_safety_retransmission_config PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+  add_library(rasta SHARED $<TARGET_OBJECTS:rasta_common>
+                           $<TARGET_OBJECTS:rasta_redundancy>
+                           $<TARGET_OBJECTS:rasta_redundancy_config>
+                           $<TARGET_OBJECTS:rasta_safety_retransmission>
+                           $<TARGET_OBJECTS:rasta_safety_retransmission_config>)
+endif()
 
 # =========== cpack ===================
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
